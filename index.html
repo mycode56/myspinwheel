@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Spin Wheel</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --neon-cyan:   #00ffff;
+      --neon-pink:   #ff00ff;
+      --neon-yellow: #ffff00;
+      --bg: #05050f;
+    }
+
+    body {
+      background: var(--bg);
+      color: #fff;
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    /* ── starfield ── */
+    #stars {
+      position: fixed; inset: 0; z-index: 0;
+      background: radial-gradient(ellipse at center, #0a0a2a 0%, #05050f 100%);
+    }
+    #stars::before, #stars::after {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 15% 25%, rgba(255,255,255,.8) 0%, transparent 100%),
+        radial-gradient(1px 1px at 75% 10%, rgba(255,255,255,.6) 0%, transparent 100%),
+        radial-gradient(1px 1px at 45% 65%, rgba(255,255,255,.9) 0%, transparent 100%),
+        radial-gradient(1px 1px at 10% 80%, rgba(255,255,255,.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 90% 45%, rgba(255,255,255,.7) 0%, transparent 100%),
+        radial-gradient(1px 1px at 30% 90%, rgba(255,255,255,.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 60% 35%, rgba(255,255,255,.6) 0%, transparent 100%),
+        radial-gradient(1px 1px at 85% 75%, rgba(255,255,255,.5) 0%, transparent 100%);
+      background-size: 350px 350px;
+      animation: twinkle 4s infinite alternate;
+    }
+    #stars::after { animation-delay: 2s; background-size: 450px 450px; }
+    @keyframes twinkle { from { opacity:.5 } to { opacity:1 } }
+
+    header, main, footer { position: relative; z-index: 1; width: 100%; }
+
+    /* ── header ── */
+    header {
+      text-align: center;
+      padding: 56px 20px 28px;
+    }
+    header h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(2rem, 6vw, 4.5rem);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .15em;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink), #bf00ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: hueShift 6s linear infinite;
+    }
+    @keyframes hueShift {
+      0%   { filter: drop-shadow(0 0 16px rgba(0,255,255,.8))  hue-rotate(0deg); }
+      50%  { filter: drop-shadow(0 0 26px rgba(255,0,255,.8))  hue-rotate(180deg); }
+      100% { filter: drop-shadow(0 0 16px rgba(0,255,255,.8))  hue-rotate(360deg); }
+    }
+    header p {
+      margin-top: 10px;
+      font-size: 1.1rem;
+      color: rgba(255,255,255,.45);
+      letter-spacing: .1em;
+    }
+
+    .divider {
+      width: 80%;
+      max-width: 600px;
+      height: 1px;
+      margin: 0 auto 48px;
+      background: linear-gradient(90deg, transparent, var(--neon-cyan), var(--neon-pink), transparent);
+      box-shadow: 0 0 10px var(--neon-cyan);
+    }
+
+    /* ── wheel section ── */
+    main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 34px;
+      padding: 0 20px 80px;
+    }
+
+    .wheel-wrapper {
+      position: relative;
+      width: min(480px, 90vw);
+      height: min(480px, 90vw);
+    }
+
+    /* pointer — right side, pointing left */
+    .pointer {
+      position: absolute;
+      top: 50%;
+      right: -30px;
+      transform: translateY(-50%);
+      width: 0; height: 0;
+      border-top:    18px solid transparent;
+      border-bottom: 18px solid transparent;
+      border-right:  36px solid var(--neon-yellow);
+      filter: drop-shadow(0 0 10px var(--neon-yellow));
+      z-index: 10;
+    }
+
+    canvas#wheel {
+      width: 100%; height: 100%;
+      border-radius: 50%;
+      box-shadow:
+        0 0 30px rgba(0,255,255,.35),
+        0 0 70px rgba(255,0,255,.15),
+        0 0 0 3px rgba(0,255,255,.25);
+      animation: wheelGlow 3s ease-in-out infinite alternate;
+    }
+    @keyframes wheelGlow {
+      from { box-shadow: 0 0 30px rgba(0,255,255,.35), 0 0 70px rgba(255,0,255,.15), 0 0 0 3px rgba(0,255,255,.25); }
+      to   { box-shadow: 0 0 50px rgba(255,0,255,.5),  0 0 90px rgba(0,255,255,.2),  0 0 0 3px rgba(255,0,255,.45); }
+    }
+
+    .hub {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #1a1a3a, #05050f);
+      border: 3px solid var(--neon-cyan);
+      box-shadow: 0 0 14px var(--neon-cyan), inset 0 0 10px rgba(0,255,255,.15);
+      z-index: 5;
+    }
+
+    /* ── spin button ── */
+    #spinBtn {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: #05050f;
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-pink));
+      border: none;
+      padding: 16px 52px;
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform .15s, box-shadow .15s;
+      box-shadow: 0 0 20px rgba(0,255,255,.45), 0 0 40px rgba(255,0,255,.25);
+    }
+    #spinBtn::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, var(--neon-pink), var(--neon-cyan));
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    #spinBtn:hover:not(:disabled) { transform: scale(1.06); box-shadow: 0 0 30px rgba(0,255,255,.8), 0 0 60px rgba(255,0,255,.5); }
+    #spinBtn:hover::before { opacity: 1; }
+    #spinBtn span { position: relative; z-index: 1; }
+    #spinBtn:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* ── result ── */
+    #result {
+      min-height: 90px;
+      text-align: center;
+      transition: opacity .4s;
+    }
+    #result.hidden { opacity: 0; pointer-events: none; }
+
+    #resultBadge {
+      display: inline-block;
+      border: 2px solid currentColor;
+      border-radius: 6px;
+      padding: 10px 28px;
+      margin-bottom: 10px;
+      background: rgba(0,0,0,.4);
+      animation: resultPop .5s cubic-bezier(.175,.885,.32,1.275);
+    }
+    #resultBadge h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.2rem, 3.5vw, 2rem);
+      font-weight: 900;
+      letter-spacing: .15em;
+    }
+    #result p {
+      font-size: 1rem;
+      color: rgba(255,255,255,.5);
+      letter-spacing: .05em;
+      animation: resultPop .5s .1s cubic-bezier(.175,.885,.32,1.275) both;
+    }
+    @keyframes resultPop {
+      from { transform: scale(.6) translateY(10px); opacity: 0; }
+      to   { transform: scale(1)  translateY(0);    opacity: 1; }
+    }
+
+    /* ── odds table ── */
+    .odds-section {
+      width: 100%;
+      max-width: 540px;
+      margin: 0 auto;
+      padding: 0 20px 60px;
+      position: relative; z-index: 1;
+    }
+    .odds-section h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: .75rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.3);
+      text-align: center;
+      margin-bottom: 14px;
+    }
+    .odds-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 8px;
+    }
+    .odds-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 4px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.06);
+    }
+    .odds-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .odds-label {
+      font-size: .78rem;
+      font-family: 'Orbitron', sans-serif;
+      letter-spacing: .05em;
+      flex: 1;
+    }
+    .odds-pct {
+      font-size: .72rem;
+      color: rgba(255,255,255,.35);
+      flex-shrink: 0;
+    }
+
+    footer {
+      text-align: center;
+      padding: 16px;
+      font-size: .75rem;
+      color: rgba(255,255,255,.15);
+      letter-spacing: .05em;
+      position: relative; z-index: 1;
+    }
+  </style>
+</head>
+<body>
+
+<div id="stars"></div>
+
+<header>
+  <h1>My Spin Wheel</h1>
+  <p>Discover your rank</p>
+</header>
+
+<div class="divider"></div>
+
+<main>
+  <div class="wheel-wrapper">
+    <canvas id="wheel" width="480" height="480"></canvas>
+    <div class="hub"></div>
+    <div class="pointer"></div>
+  </div>
+
+  <button id="spinBtn"><span>⚔️ SPIN ⚔️</span></button>
+
+  <div id="result" class="hidden">
+    <div id="resultBadge"><h2 id="resultText"></h2></div>
+    <p id="resultSub"></p>
+  </div>
+</main>
+
+<!-- odds reference -->
+<div class="odds-section">
+  <h3>Drop Rates</h3>
+  <div class="odds-grid" id="oddsGrid"></div>
+</div>
+
+<footer>© 2026 My Spin Wheel</footer>
+
+<script>
+  // LoL rank distribution (approximate Season 2024 data)
+  const ranks = [
+    { label: 'Iron',        prob: 8.6,  visual: 9,    color: '#9e9e9e', sub: 'Every legend starts somewhere.' },
+    { label: 'Bronze',      prob: 20.0, visual: 19,   color: '#cd7f32', sub: 'Grinding through the trenches.' },
+    { label: 'Silver',      prob: 25.0, visual: 23,   color: '#d0d0d0', sub: 'Solid fundamentals.' },
+    { label: 'Gold',        prob: 22.0, visual: 21,   color: '#ffd700', sub: 'Above average. Respect.' },
+    { label: 'Platinum',    prob: 11.0, visual: 11,   color: '#00c8a0', sub: 'Top 20%. Not bad at all.' },
+    { label: 'Emerald',     prob: 7.0,  visual: 7,    color: '#50c878', sub: 'Top 13%. You\'re different.' },
+    { label: 'Diamond',     prob: 4.0,  visual: 5,    color: '#70c8f8', sub: 'Top 6%. That\'s elite.' },
+    { label: 'Master',      prob: 1.0,  visual: 3,    color: '#b44ff0', sub: 'Top 1%. Genuinely cracked.' },
+    { label: 'Grandmaster', prob: 0.3,  visual: 1.5,  color: '#ff4444', sub: 'Top 0.3%. You\'re a menace.' },
+    { label: 'Challenger',  prob: 0.1,  visual: 0.5,  color: '#00eeff', sub: '🏆 Top 0.1%. The chosen one.' },
+  ];
+
+  // Normalize visual weights → arc sizes
+  const totalVisual = ranks.reduce((s, r) => s + r.visual, 0);
+  const totalProb   = ranks.reduce((s, r) => s + r.prob,   0);
+  let cum = 0;
+  const segs = ranks.map(r => {
+    const arc   = (r.visual / totalVisual) * 2 * Math.PI;
+    const start = cum;
+    cum += arc;
+    return { ...r, arc, arcStart: start, arcEnd: cum };
+  });
+
+  // Build odds table
+  const grid = document.getElementById('oddsGrid');
+  ranks.forEach(r => {
+    const pct = ((r.prob / totalProb) * 100).toFixed(r.prob < 1 ? 2 : 1);
+    grid.insertAdjacentHTML('beforeend', `
+      <div class="odds-item">
+        <div class="odds-dot" style="background:${r.color};box-shadow:0 0 5px ${r.color}"></div>
+        <span class="odds-label" style="color:${r.color}">${r.label}</span>
+        <span class="odds-pct">${pct}%</span>
+      </div>`);
+  });
+
+  // Weighted random pick using actual probabilities
+  function pickWinner() {
+    let rand = Math.random() * totalProb;
+    for (const r of ranks) {
+      rand -= r.prob;
+      if (rand <= 0) return r.label;
+    }
+    return ranks[ranks.length - 1].label;
+  }
+
+  const canvas = document.getElementById('wheel');
+  const ctx    = canvas.getContext('2d');
+  const CX = canvas.width / 2;
+  const CY = canvas.height / 2;
+  const R  = CX - 8;
+
+  let rotation = 0;
+  let spinning  = false;
+
+  function drawWheel(rot) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    segs.forEach(seg => {
+      const s = rot + seg.arcStart;
+      const e = rot + seg.arcEnd;
+
+      // Slice fill
+      ctx.beginPath();
+      ctx.moveTo(CX, CY);
+      ctx.arc(CX, CY, R, s, e);
+      ctx.closePath();
+      ctx.fillStyle = seg.color + '1e';
+      ctx.fill();
+
+      // Slice border
+      ctx.strokeStyle = seg.color;
+      ctx.lineWidth   = 1.5;
+      ctx.shadowColor = seg.color;
+      ctx.shadowBlur  = 10;
+      ctx.stroke();
+      ctx.shadowBlur  = 0;
+
+      // Label
+      const arcDeg = (seg.arc * 180) / Math.PI;
+      if (arcDeg < 5) return; // too small to label
+
+      const mid = rot + seg.arcStart + seg.arc / 2;
+      ctx.save();
+      ctx.translate(CX, CY);
+      ctx.rotate(mid);
+      ctx.textAlign = 'right';
+
+      const fontSize = arcDeg > 25 ? 13 : arcDeg > 14 ? 11 : 9;
+      const text     = arcDeg < 18 ? seg.label.slice(0, 4).toUpperCase() : seg.label.toUpperCase();
+      ctx.font        = `bold ${fontSize}px Orbitron, sans-serif`;
+      ctx.fillStyle   = seg.color;
+      ctx.shadowColor = seg.color;
+      ctx.shadowBlur  = 8;
+      ctx.fillText(text, R - 12, 4);
+      ctx.restore();
+    });
+
+    // Outer ring
+    ctx.beginPath();
+    ctx.arc(CX, CY, R, 0, 2 * Math.PI);
+    ctx.strokeStyle = 'rgba(0,255,255,.35)';
+    ctx.lineWidth   = 4;
+    ctx.shadowColor = '#00ffff';
+    ctx.shadowBlur  = 18;
+    ctx.stroke();
+    ctx.shadowBlur  = 0;
+  }
+
+  drawWheel(rotation);
+
+  const btn      = document.getElementById('spinBtn');
+  const result   = document.getElementById('result');
+  const badge    = document.getElementById('resultBadge');
+  const resText  = document.getElementById('resultText');
+  const resSub   = document.getElementById('resultSub');
+
+  btn.addEventListener('click', () => {
+    if (spinning) return;
+    spinning = true;
+    btn.disabled = true;
+    result.classList.add('hidden');
+
+    // 1. Pick winner via weighted probability
+    const winnerLabel = pickWinner();
+    const winner      = segs.find(s => s.label === winnerLabel);
+
+    // 2. Pick a random point within winner's visual arc (avoid edges)
+    const margin = winner.arc * 0.15;
+    const targetInWheel = winner.arcStart + margin + Math.random() * (winner.arc - margin * 2);
+
+    // 3. Pointer is at canvas angle 0 (right side).
+    //    Canvas angle of point in wheel = rotation + wheelAngle.
+    //    We need: rotation + targetInWheel ≡ 0 (mod 2π)
+    //    → target rotation (mod 2π) = (2π - targetInWheel) mod 2π
+    const normalizedRot = ((rotation % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+    const targetRot     = ((2 * Math.PI - targetInWheel) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+
+    let delta = targetRot - normalizedRot;
+    if (delta <= 0) delta += 2 * Math.PI;
+
+    const numSpins      = 6 + Math.floor(Math.random() * 5);
+    const totalRotation = numSpins * 2 * Math.PI + delta;
+    const startRot      = rotation;
+    const duration      = 4500 + Math.random() * 1500;
+    const startTime     = performance.now();
+
+    function easeOut(t) { return 1 - Math.pow(1 - t, 4); }
+
+    function animate(now) {
+      const elapsed  = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      rotation = startRot + totalRotation * easeOut(progress);
+      drawWheel(rotation);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        spinning = false;
+        btn.disabled = false;
+
+        resText.textContent = winner.label.toUpperCase();
+        resText.style.color = winner.color;
+        badge.style.borderColor  = winner.color;
+        badge.style.boxShadow    = `0 0 24px ${winner.color}60`;
+        badge.style.background   = winner.color + '14';
+        resSub.textContent = winner.sub;
+        result.classList.remove('hidden');
+
+        // Re-trigger animation by cloning
+        const fresh = badge.cloneNode(true);
+        badge.parentNode.replaceChild(fresh, badge);
+      }
+    }
+
+    requestAnimationFrame(animate);
+  });
+</script>
+</body>
+</html>
